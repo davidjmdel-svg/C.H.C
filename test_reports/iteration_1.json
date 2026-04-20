@@ -1,0 +1,53 @@
+{
+  "summary": "Frontend-only mobile testing of Spanish diabetes carb counter app on Expo web preview. Tested calculator flow (inputs, computations, ration selector, warning), save, history navigation, search, favorites filter, edit prefill, delete. Core calculations and UI elements function correctly. Minor deprecation warnings from RN web.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Save → Tab navigation",
+        "issue": "After saving product, Alert confirm auto-accepted via dialog handler triggers resetForm which calls router.setParams({id:''}). Subsequent click on tab-history intermittently timed out in Playwright though tab bar is visible. May be transient router state issue; could be test-script flakiness, not confirmed app bug. History & edit navigation WORK when navigated manually.",
+        "affected_testIDs": ["tab-history", "save-product-btn"]
+      }
+    ],
+    "design_issues": [],
+    "react_native_issues": [
+      {"component": "shadow* props (saveBtn in index.tsx)", "issue": "Console warning: 'shadow*' style props are deprecated. Use 'boxShadow'. Non-blocking on native, but noisy on web."},
+      {"component": "TouchableWithoutFeedback (index.tsx line 239)", "issue": "Console warning: TouchableWithoutFeedback is deprecated. Use Pressable."},
+      {"component": "pointerEvents prop", "issue": "Console warning: props.pointerEvents is deprecated. Use style.pointerEvents. Likely from a lib."}
+    ]
+  },
+  "verified_behaviors": [
+    "App loads at https://insulin-portions.preview.emergentagent.com with screen-title 'Calcular'",
+    "carbs=24, weight=125 → result-total-carbs = '30' ✓",
+    "result-max-rations = '3' ✓",
+    "ration-selector-btn-3 → grams-needed-value = '125', NO warning shown ✓",
+    "ration-selector-btn-4 → grams-needed-value = '166,7', warning-message-insufficient-product visible with '41,7g' falta and '0,33 productos extra' ✓",
+    "favorite-toggle-btn toggles state ✓",
+    "save-product-btn triggers native Alert ('Guardado') and persists to AsyncStorage ✓",
+    "Bottom tabs Calcular + Historial render with tabBarTestID attributes ✓",
+    "Spanish locale decimal formatting works (166,7 / 41,7 / 0,33) ✓"
+  ],
+  "test_report_links": ["/app/test_reports/iteration_1.json"],
+  "action_items": [
+    "Optional cleanup: replace TouchableWithoutFeedback with Pressable in app/(tabs)/index.tsx to silence deprecation warning.",
+    "Optional: migrate saveBtn shadow* props to boxShadow (or guard with Platform.OS !== 'web') to silence warning on web.",
+    "If tab navigation post-save is flaky, consider not calling router.setParams inside Alert 'OK' callback, or dismiss Alert first then reset.",
+    "Consider adding a testID on the 'Guardar en historial' alert confirm text or using accessibility label for more robust alert assertions.",
+    "Main agent may self-verify tab navigation post-save manually; rest of flows are verified."
+  ],
+  "critical_code_review_comments": [
+    "index.tsx is 812 lines — approaching size limit; consider extracting Field, styles, and photo handlers into separate modules.",
+    "Good: uses EXPO_PUBLIC_BACKEND_URL env (though not needed here), uses StyleSheet.create, Text components, testIDs on all interactive elements.",
+    "Good: calc.ts is pure functions — easily unit-testable.",
+    "Minor: resetForm calls router.setParams({id:''}) with empty id; safer to use replace('/' ).",
+    "Minor: brand/category filtering in history uses toLowerCase — works; consider normalizing accents for better Spanish search (e.g., 'Lácteos' vs 'lacteos')."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "~92%"},
+  "seed_data_creation": "Created one TEST product 'Quinoa' (Hacendado, Cereales, 24% HC, 125g, favorite) in AsyncStorage during test; then attempted delete. Manual cleanup may be needed if orphaned.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All calculation testIDs verified (input-name, input-brand, input-carbs-per-100g, input-total-weight, category-chip-*, ration-selector-btn-1..4, result-total-carbs, result-max-rations, grams-needed-value, warning-message-insufficient-product, save-product-btn, favorite-toggle-btn, tab-calculate, tab-history, search-input, filter-all, filter-favorites, history-item-*, fav-btn-*, edit-btn-*, delete-btn-*, reset-form-btn). Spanish decimal uses comma (166,7 not 166.7). Alert.alert shown as browser dialog in web — use page.on('dialog', lambda d: d.accept()). Edit navigation: router.push('/', {id}) reopens calculator with prefilled fields, verified screen-title changes to 'Editar producto' and reset-form-btn appears.",
+  "rca_of_issue": "Tab-history timeout after save: Alert 'OK' onPress calls resetForm which calls router.setParams({id:''}). This likely replays route and temporarily detaches the tab bar while next tick occurs, causing the click to miss. Recommendation: remove router.setParams from the OK handler (state reset alone is sufficient for non-edit mode) or add a setTimeout."
+}

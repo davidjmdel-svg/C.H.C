@@ -1,0 +1,40 @@
+{
+  "summary": "Tested iteration 2 (light lilac theme, cooking toggle, rations 1-8, close-form button, save-reset fix). Theme, cooking, rations, warnings, close-btn visibility, and persistence all work. CRITICAL: Save/Update/Close-Discard/Delete flows DO NOT reset/execute on web because React Native Web's Alert.alert does not trigger onPress callbacks — it calls window.alert() which blocks and has no interactive buttons. The product IS saved to AsyncStorage (verified via localStorage), but the form never resets and destructive confirmations never fire on web.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "CalculatorScreen", "issue": "After save-product-btn click, form is NOT reset. Fields remain populated (name='Quinoa Test', carbs='24', weight='125'), close-form-btn remains visible, window.alert fires with undefined message and no interactive OK button. Root cause: resetForm() is placed inside Alert.alert's OK onPress callback which React Native Web does NOT invoke.", "testID": "save-product-btn", "priority": "CRITICAL"},
+      {"component": "CalculatorScreen", "issue": "Close-form discard Alert: 'Descartar' button onPress → resetForm never fires on web (same RN-Web Alert limitation). User cannot discard via close-form-btn on web.", "testID": "close-form-btn", "priority": "HIGH"},
+      {"component": "HistoryScreen", "issue": "Delete confirmation Alert: 'Eliminar' button onPress → deleteProduct never fires on web (same RN-Web limitation). Delete flow broken on web.", "testID": "delete-btn-[id]", "priority": "HIGH"},
+      {"component": "Alert calls across app", "issue": "All multi-button Alert.alert dialogs (photo picker options, save confirmation, discard confirmation, delete confirmation, update confirmation) degrade to a non-interactive window.alert on web with undefined message."}
+    ],
+    "integration_issues": [
+      {"flow": "Save → Reset → History", "issue": "Product saves correctly to AsyncStorage/localStorage and would appear in History once user navigates there, but because form never resets and native alert blocks the UI, the user experience described in the AC is broken on web.", "affected_testIDs": ["save-product-btn", "input-name", "input-carbs-per-100g", "input-total-weight", "close-form-btn"]}
+    ],
+    "design_issues": [],
+    "react_native_issues": [
+      {"component": "TouchableWithoutFeedback", "issue": "Console warning: 'TouchableWithoutFeedback is deprecated. Please use Pressable.' (index.tsx line 297). Minor."},
+      {"component": "Stack/pointerEvents", "issue": "Console warning: 'props.pointerEvents is deprecated. Use style.pointerEvents' (non-blocking, likely from lib)."}
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_2.json"],
+  "action_items": [
+    "CRITICAL: Stop relying on Alert.alert onPress callbacks for state mutations on web. Move resetForm() to run IMMEDIATELY after await addProduct/updateProduct succeeds (before showing the alert), or gate it on Platform.OS. Recommended pattern: `await addProduct(...); resetForm(); Alert.alert('Guardado', 'El producto se ha añadido al historial.');` (no callback needed).",
+    "HIGH: For destructive confirmations on web, use either (a) a custom in-app modal using React Native View/Text/TouchableOpacity with testIDs for 'confirm-discard-btn' and 'confirm-delete-btn', or (b) Platform.OS==='web' branch using window.confirm() synchronously to get user decision before executing resetForm / deleteProduct.",
+    "Apply the same fix to handleClose (discard), handleDelete (history), and any other multi-button Alert.alert that relies on onPress callbacks.",
+    "Consider replacing TouchableWithoutFeedback with Pressable to silence deprecation warning."
+  ],
+  "critical_code_review_comments": [
+    "index.tsx handleSave (lines 263-272): resetForm inside Alert OK onPress will never fire on RN-Web. Move outside the Alert.",
+    "index.tsx handleClose (lines 166-177): Same pattern — Descartar onPress won't fire on web.",
+    "history.tsx handleDelete (lines 70-84): Same pattern — Eliminar onPress won't fire on web; delete is effectively broken on web.",
+    "Verified working: theme (light lilac #F6F2FA bg, #8B5CF6 primary), cooking toggle, preset chips, cooked grams (125g dry × 3 = 375g), rations 1-8 in horizontal scroll, warning for insufficient product, favorite toggle, close-form-btn visibility toggling on hasAnyData, computation correctness (30g HC, 3 raciones, 208.3g for r=5)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (frontend-only)", "frontend": "~55% (calc/UI/theme/persistence pass; save-reset, close-discard, delete-confirm all broken on web)"},
+  "seed_data_creation": "Created one product 'Quinoa Test' (24g HC/100g, 125g) in AsyncStorage via save-product-btn; it persisted successfully in localStorage.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "After fix, verify on web: (1) Save flow fully clears the form and hides close-form-btn immediately after clicking save-product-btn (no reliance on Alert.alert OK). (2) Close-form-btn discard clears the form on web. (3) Delete confirmation actually removes item from history on web. (4) Edit flow: after Update, form also resets. Use localStorage inspection: localStorage.getItem('diabetes_products_v1'). RN-Web Alert calls window.alert(title) only — the onPress callbacks never fire. Test credentials: none (local AsyncStorage only, no auth).",
+  "rca_of_issue": "React Native Web's Alert.alert implementation only surfaces the title via window.alert(title) and ignores button onPress callbacks (no interactive buttons in the browser dialog). Any logic placed inside button onPress of a multi-button Alert will silently not execute on web. This affects: form reset after save/update, form reset after discard, product deletion after confirmation. The product DOES persist to AsyncStorage (save itself runs before the Alert), but all post-alert effects are lost. Reproduction: open app on web, fill input-name/input-carbs-per-100g/input-total-weight, click save-product-btn → browser window.alert appears with no message → dismiss → form fields still populated, close-form-btn still visible, but localStorage entry exists. Mitigation: perform the state/mutation work BEFORE or OUTSIDE the Alert.alert call. For destructive actions, use a custom React Native modal with testIDs so both native and web work consistently."
+}
