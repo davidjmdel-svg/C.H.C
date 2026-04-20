@@ -1,0 +1,159 @@
+{
+  "theme": "Dark",
+  "archetype": "Warm Earthy Dark (Archetype 1 adapted for dark mode)",
+  "emotional_tone": "Warm, friendly, accessible, trustworthy, non-clinical",
+  "target_audience": "Diabetics (including older demographics) managing daily carbohydrate intake",
+  "typography": {
+    "font_families": {
+      "heading": "Outfit, sans-serif",
+      "body": "Manrope, sans-serif",
+      "mono": "Space Mono, monospace"
+    },
+    "hierarchy": {
+      "h1_calculator_result": "text-5xl md:text-6xl font-black font-heading tracking-tight",
+      "h2_screen_title": "text-3xl font-bold font-heading tracking-tight",
+      "h3_card_title": "text-xl font-bold font-heading",
+      "body_large": "text-lg font-body",
+      "body_base": "text-base font-body",
+      "label_small": "text-sm font-bold font-body tracking-wider uppercase",
+      "caption": "text-xs font-body text-text-secondary"
+    }
+  },
+  "colors": {
+    "background": {
+      "default": "#161413",
+      "surface": "#24211F",
+      "input": "#1A1817",
+      "overlay": "rgba(22, 20, 19, 0.8)"
+    },
+    "primary": {
+      "default": "#E06C53",
+      "hover": "#D25F47",
+      "light": "#F2B8A2",
+      "text_on_primary": "#FFFFFF"
+    },
+    "text": {
+      "primary": "#F5EFEB",
+      "secondary": "#A69B96",
+      "disabled": "#5E5652"
+    },
+    "border": {
+      "default": "#3D3734",
+      "focus": "#E06C53"
+    },
+    "status": {
+      "success": "#7DA177",
+      "warning": "#F29C38",
+      "error": "#E55B5B"
+    }
+  },
+  "spacing_and_layout": {
+    "screen_padding": "px-6 py-8",
+    "card_padding": "p-5",
+    "input_height": "h-14",
+    "button_height": "h-14",
+    "touch_target_min": "48px",
+    "border_radius": {
+      "card": "rounded-3xl",
+      "input": "rounded-2xl",
+      "button": "rounded-2xl",
+      "image": "rounded-xl"
+    },
+    "gap": {
+      "form_group": "gap-4",
+      "section": "gap-8"
+    }
+  },
+  "components": {
+    "bottom_tab_navigator": {
+      "style": "bg-surface border-t border-border h-20 pb-5 pt-3",
+      "active_color": "text-primary",
+      "inactive_color": "text-text-secondary"
+    },
+    "input_field": {
+      "container": "flex flex-col gap-2",
+      "label": "text-sm text-text-secondary font-bold uppercase tracking-wider",
+      "input": "bg-input border border-border rounded-2xl h-14 px-4 text-text-primary text-lg focus:border-primary",
+      "test_id_pattern": "input-[field-name]"
+    },
+    "ration_selector": {
+      "container": "flex flex-row justify-between gap-2 mt-4",
+      "button_default": "flex-1 h-14 bg-surface border border-border rounded-2xl items-center justify-center",
+      "button_active": "flex-1 h-14 bg-primary border-primary rounded-2xl items-center justify-center",
+      "text_default": "text-text-primary font-bold text-xl",
+      "text_active": "text-white font-bold text-xl",
+      "test_id": "ration-selector-btn-[1-4]"
+    },
+    "result_card": {
+      "container": "bg-surface border border-primary/30 rounded-3xl p-6 mt-6 items-center flex-col",
+      "label": "text-primary text-sm font-bold uppercase tracking-wider mb-2",
+      "value": "text-6xl font-black text-text-primary",
+      "unit": "text-xl text-text-secondary font-bold ml-1"
+    },
+    "history_card": {
+      "container": "bg-surface rounded-3xl p-4 flex flex-row items-center gap-4 mb-4 border border-border",
+      "image": "w-16 h-16 rounded-xl bg-input object-cover",
+      "content": "flex-1 flex flex-col justify-center",
+      "title": "text-lg font-bold text-text-primary",
+      "subtitle": "text-sm text-text-secondary",
+      "actions": "flex flex-row gap-3 items-center",
+      "test_id": "history-item-[id]"
+    },
+    "warning_message": {
+      "container": "bg-error/10 border border-error/20 rounded-2xl p-4 mt-4 flex flex-row gap-3 items-start",
+      "text": "text-error text-sm font-medium leading-relaxed flex-1",
+      "test_id": "warning-message-insufficient-product"
+    },
+    "photo_picker": {
+      "container": "h-32 w-full bg-input border-2 border-dashed border-border rounded-3xl items-center justify-center mb-4",
+      "text": "text-text-secondary font-medium mt-2",
+      "test_id": "photo-picker-button"
+    }
+  },
+  "icons_strategy": {
+    "library": "Phosphor Icons (@phosphor-icons/react-native) or Lucide-react-native",
+    "style": "Regular or Fill weight for solid shapes. Avoid ultra-thin icons.",
+    "usage": {
+      "tab_calculate": "Calculator",
+      "tab_history": "ClockCounterClockwise or List",
+      "favorite": "Star (Fill for active, Regular for inactive)",
+      "edit": "PencilSimple",
+      "delete": "Trash",
+      "camera": "Camera",
+      "warning": "WarningCircle"
+    }
+  },
+  "animation_and_interactions": {
+    "button_press": "Scale down to 0.95 with smooth spring animation",
+    "screen_transition": "Standard React Navigation slide or fade",
+    "calculation_result": "Number counter animation or subtle pop scale effect when value updates"
+  },
+  "accessibility": {
+    "contrast": "Exceeds WCAG AA standards. High contrast mode ready.",
+    "touch_targets": "All interactive elements are at least 48x48px.",
+    "typography": "Dynamic Type support required for visually impaired users.",
+    "test_ids": "MANDATORY on all buttons, inputs, list items, and result displays for automated testing."
+  },
+  "media": {
+    "empty_state_history": {
+      "url": "https://images.pexels.com/photos/1192031/pexels-photo-1192031.jpeg",
+      "description": "Dark, moody top view of fresh vegetables to use as a beautiful empty state background or placeholder."
+    },
+    "placeholder_food_image": {
+      "url": "https://images.pexels.com/photos/5794777/pexels-photo-5794777.jpeg",
+      "description": "Colorful vegetables on dark background. Fallback image if user takes no photo."
+    }
+  },
+  "instructions_to_main_agent": [
+    "This is an Expo React Native application. Use standard React Native View/Text components mapped to these Tailwind classes (using NativeWind or similar).",
+    "Apply 'font-heading' (Outfit) to numerical results and large titles for friendly personality.",
+    "Ensure the mathematical logic is exactly as requested: Total Carbs = (Product Weight / 100) * (Carbs per 100g).",
+    "1 Ration = 10g of carbs.",
+    "Ration calculation logic: If user selects X rations (which requires X * 10g carbs), calculate the Grams of Product needed = (X * 10 * 100) / Carbs per 100g.",
+    "If 'Grams of Product needed' > 'Total Product Weight', trigger the Warning Message component dynamically.",
+    "Do NOT use pure #000000 background. The background must be the warm dark charcoal (#161413) provided.",
+    "Include an 'Add to History' button on the Calculator screen so the entered data can be saved with the Photo.",
+    "Use Phosphor icons (if possible) or Lucide icons with 24px-28px sizing for legibility.",
+    "Ensure all inputs have `data-testid` (or `testID` in React Native) formatted properly."
+  ]
+}
