@@ -25,6 +25,7 @@ import {
   Check,
   ChefHat,
   Sparkles,
+  CheckCircle2,
 } from "lucide-react-native";
 import { colors, radius, spacing } from "../../src/theme";
 import {
@@ -81,6 +82,26 @@ export default function CalculatorScreen() {
   const [cookingEnabled, setCookingEnabled] = useState(false);
   const [factorStr, setFactorStr] = useState("3");
   const [rations, setRations] = useState(1);
+  const [toast, setToast] = useState<{
+    type: "success" | "error";
+    msg: string;
+  } | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = useCallback(
+    (type: "success" | "error", msg: string) => {
+      setToast({ type, msg });
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+      toastTimer.current = setTimeout(() => setToast(null), 3000);
+    },
+    []
+  );
+
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
+  }, []);
 
   // Load product when navigating with ?id=
   useEffect(() => {
@@ -236,14 +257,11 @@ export default function CalculatorScreen() {
 
   const handleSave = useCallback(async () => {
     if (!name.trim()) {
-      notify("Falta el nombre", "Por favor, escribe el nombre del producto.");
+      showToast("error", "Falta el nombre del producto.");
       return;
     }
     if (!canCompute) {
-      notify(
-        "Datos incompletos",
-        "Introduce los hidratos y el peso total para guardar."
-      );
+      showToast("error", "Introduce los hidratos y el peso total.");
       return;
     }
     try {
@@ -264,16 +282,15 @@ export default function CalculatorScreen() {
       } else {
         await addProduct(payload);
       }
-      // Reset BEFORE notify so Alert.alert on web (no callback support) still resets.
       resetForm();
-      notify(
-        wasEditing ? "Actualizado" : "Guardado",
+      showToast(
+        "success",
         wasEditing
-          ? "El producto se ha actualizado en el historial."
-          : "El producto se ha añadido al historial."
+          ? "Producto actualizado en el historial."
+          : "Producto guardado en el historial."
       );
     } catch (e) {
-      notify("Error", "No se pudo guardar el producto.");
+      showToast("error", "No se pudo guardar el producto.");
     }
   }, [
     editingId,
@@ -288,6 +305,7 @@ export default function CalculatorScreen() {
     factor,
     canCompute,
     resetForm,
+    showToast,
   ]);
 
   return (
@@ -295,6 +313,27 @@ export default function CalculatorScreen() {
       style={styles.flex}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      {toast && (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.toast,
+            {
+              top: insets.top + 12,
+              backgroundColor:
+                toast.type === "success" ? colors.success : colors.error,
+            },
+          ]}
+          testID={`toast-${toast.type}`}
+        >
+          {toast.type === "success" ? (
+            <CheckCircle2 color="#fff" size={20} />
+          ) : (
+            <AlertTriangle color="#fff" size={20} />
+          )}
+          <Text style={styles.toastText}>{toast.msg}</Text>
+        </View>
+      )}
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <ScrollView
           style={styles.flex}
@@ -1033,5 +1072,28 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "800",
     fontSize: 17,
+  },
+  toast: {
+    position: "absolute",
+    left: 20,
+    right: 20,
+    zIndex: 999,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: radius.lg,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+  },
+  toastText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 15,
+    flex: 1,
   },
 });
