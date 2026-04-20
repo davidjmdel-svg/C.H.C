@@ -7,7 +7,6 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  Alert,
   RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -28,6 +27,7 @@ import {
   updateProduct,
 } from "../../src/storage";
 import { fmt, maxRations, totalCarbs } from "../../src/calc";
+import { confirmAction } from "../../src/dialog";
 
 export default function HistoryScreen() {
   const insets = useSafeAreaInsets();
@@ -66,22 +66,16 @@ export default function HistoryScreen() {
   }, [products, query, onlyFavs]);
 
   const handleDelete = useCallback(
-    (p: Product) => {
-      Alert.alert(
+    async (p: Product) => {
+      const ok = await confirmAction(
         "Eliminar producto",
         `¿Seguro que quieres eliminar "${p.name}" del historial?`,
-        [
-          { text: "Cancelar", style: "cancel" },
-          {
-            text: "Eliminar",
-            style: "destructive",
-            onPress: async () => {
-              await deleteProduct(p.id);
-              load();
-            },
-          },
-        ]
+        "Eliminar",
+        true
       );
+      if (!ok) return;
+      await deleteProduct(p.id);
+      load();
     },
     [load]
   );

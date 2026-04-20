@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   Image,
   Keyboard,
   TouchableWithoutFeedback,
@@ -33,6 +32,7 @@ import {
   getProductById,
   updateProduct,
 } from "../../src/storage";
+import { confirmAction, notify, choose } from "../../src/dialog";
 import {
   totalCarbs,
   maxRations,
@@ -161,27 +161,22 @@ export default function CalculatorScreen() {
     consumedIdRef.current = null;
   }, []);
 
-  const handleClose = useCallback(() => {
+  const handleClose = useCallback(async () => {
     if (!hasAnyData) return;
-    Alert.alert(
+    const ok = await confirmAction(
       "¿Cancelar?",
       "Se descartarán los datos que no hayas guardado.",
-      [
-        { text: "Seguir editando", style: "cancel" },
-        {
-          text: "Descartar",
-          style: "destructive",
-          onPress: resetForm,
-        },
-      ]
+      "Descartar",
+      true
     );
+    if (ok) resetForm();
   }, [hasAnyData, resetForm]);
 
   const pickPhoto = useCallback(async () => {
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert(
+        notify(
           "Permiso requerido",
           "Necesitamos acceso a tus fotos para añadir imagen del producto."
         );
@@ -198,7 +193,7 @@ export default function CalculatorScreen() {
         setPhoto(`data:image/jpeg;base64,${res.assets[0].base64}`);
       }
     } catch (e) {
-      Alert.alert("Error", "No se pudo cargar la imagen.");
+      notify("Error", "No se pudo cargar la imagen.");
     }
   }, []);
 
@@ -206,7 +201,7 @@ export default function CalculatorScreen() {
     try {
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert(
+        notify(
           "Permiso requerido",
           "Necesitamos acceso a la cámara para tomar foto del producto."
         );
@@ -222,25 +217,30 @@ export default function CalculatorScreen() {
         setPhoto(`data:image/jpeg;base64,${res.assets[0].base64}`);
       }
     } catch (e) {
-      Alert.alert("Error", "No se pudo tomar la foto.");
+      notify("Error", "No se pudo tomar la foto.");
     }
   }, []);
 
-  const handlePhotoOptions = useCallback(() => {
-    Alert.alert("Añadir foto", "¿De dónde quieres obtener la foto?", [
-      { text: "Cámara", onPress: takePhoto },
-      { text: "Galería", onPress: pickPhoto },
-      { text: "Cancelar", style: "cancel" },
-    ]);
+  const handlePhotoOptions = useCallback(async () => {
+    const choice = await choose(
+      "Añadir foto",
+      "¿De dónde quieres obtener la foto?",
+      [
+        { label: "Cámara", value: "camera" },
+        { label: "Galería", value: "gallery" },
+      ]
+    );
+    if (choice === "camera") takePhoto();
+    else if (choice === "gallery") pickPhoto();
   }, [pickPhoto, takePhoto]);
 
   const handleSave = useCallback(async () => {
     if (!name.trim()) {
-      Alert.alert("Falta el nombre", "Por favor, escribe el nombre del producto.");
+      notify("Falta el nombre", "Por favor, escribe el nombre del producto.");
       return;
     }
     if (!canCompute) {
-      Alert.alert(
+      notify(
         "Datos incompletos",
         "Introduce los hidratos y el peso total para guardar."
       );
@@ -258,21 +258,22 @@ export default function CalculatorScreen() {
         cookingEnabled,
         cookingFactor: cookingEnabled ? factor : undefined,
       };
+      const wasEditing = !!editingId;
       if (editingId) {
         await updateProduct(editingId, payload);
-        Alert.alert(
-          "Actualizado",
-          "El producto se ha actualizado en el historial.",
-          [{ text: "OK", onPress: resetForm }]
-        );
       } else {
         await addProduct(payload);
-        Alert.alert("Guardado", "El producto se ha añadido al historial.", [
-          { text: "OK", onPress: resetForm },
-        ]);
       }
+      // Reset BEFORE notify so Alert.alert on web (no callback support) still resets.
+      resetForm();
+      notify(
+        wasEditing ? "Actualizado" : "Guardado",
+        wasEditing
+          ? "El producto se ha actualizado en el historial."
+          : "El producto se ha añadido al historial."
+      );
     } catch (e) {
-      Alert.alert("Error", "No se pudo guardar el producto.");
+      notify("Error", "No se pudo guardar el producto.");
     }
   }, [
     editingId,
